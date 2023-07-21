@@ -1,0 +1,32 @@
+# Django-related files
+*.pyc
+*.pyo
+*.pyd
+*.pyi
+*.sqlite3
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+
+# Ignore development settings (if using multiple settings files)
+settings_local.py
+settings_secret.py
+
+# Ignore static files collected for production
+# static/
+
+# Ignore environment-specific files
+.env
+*.env.*
+auth.json
+listOfDesktopID.txt
+
+# Ignore log files
+*.log
+
+# Ignore generated artifacts
+*.egg-info/
+dist/
+build/
+env/

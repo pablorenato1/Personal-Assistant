@@ -1,0 +1,33 @@
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.spotify-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+button {
+    margin-right: 50px;
+    height: 50%;
+    margin-top: 15px;
+}
+
+.login-status {
+    display: flex;
+}
+
+.status-spotify {
+    display: flex;
+    flex-direction: column;
+}
+
+p, #resultTag {
+    margin-bottom: 0;
+    text-align: center;
+}
