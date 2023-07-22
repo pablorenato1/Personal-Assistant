@@ -41,8 +41,8 @@ pip install -r requirements.txt
 ### Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/personal-assistant-django.git
-cd personal-assistant-django
+git clone https://github.com/pablorenato1/Virtual-Assistant.git
+cd Virtual-Assistant
 ```
 
 ### Set up environment variables:
@@ -55,6 +55,8 @@ CLIENT_SECRET=your_spotify_client_secret
 AUDIO_PATH=/path/to/save/audio/output.mp3
 SPOTIFY_PATH=/path/to/spotify.exe (Optional: Path to your Spotify executable, if using Windows)
 ```
+Obs.: The path to Spotify.exe is only used if you try any command without having you spotify open
+
 #### How to get CLIENT_ID and CLIENT_SECRET:
 * Well both can be found in you https://developer.spotify.com/dashboard
     *  If you don't have an 'app' on dashboard create one with the name as you prefer
