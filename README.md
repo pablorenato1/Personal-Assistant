@@ -2,32 +2,10 @@
 
 This is a Django project for a simple personal assistant with voice interaction and Spotify integration.
 
-<style>
-.warning {
-    padding: 1em;
-    border: 2px solid #f0ad4e;
-    background-color: #fcf8e3;
-    border-radius: 5px;
-}
-.warning h3 {
-    margin-top: 0;
-    margin-bottom: 0.5em;
-    color: Orange;
-}
-.warning p {
-    margin-top: 0;
-    color: black
-}
-</style>
 
+> **Warning:**
+> This project is for personal uses and is currently under development, and certain features may not be fully functional. 
 
-<div class="warning" markdown="1">
-
-### Important Notice
-
-This project is currently under development, and certain features may not be fully functional or stable. 
-
-</div>
 
 
 ## Project Overview
