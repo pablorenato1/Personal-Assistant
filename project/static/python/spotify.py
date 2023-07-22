@@ -5,7 +5,6 @@ import json
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect
 from project.static.python.shared_queue import shared_queue
 import requests
 import webbrowser
@@ -269,3 +268,6 @@ class SpotifyAssistant:
         # except:
         #     pass
         return HttpResponse(result)
+
+# Implement a way to change device that is current play from smartphone to computer or the other way around
+

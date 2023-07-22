@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import time
+from django.shortcuts import redirect
 import keyboard
 import pygame
 import pyaudio
@@ -30,7 +31,7 @@ class PersonalAssistant:
         semaphore.acquire()
         language = "en"
         tts = gTTS(text=text, lang=language, slow=False)
-        tts.save(self.output_path)
+        tts.save(self.output_path) 
 
         # Initialize pygame mixer (if not already initialized)
         pygame.mixer.init()
@@ -52,20 +53,20 @@ class PersonalAssistant:
         sound.stop()
 
         # Delete the 'output.mp3' file after playback is finished
-        os.remove(output_mp3_path)
+        os.remove(output_mp3_path) #### Verify if it's necessary be here, if tts can overwrite the current on so we remove
         semaphore.release()
 
     def get_audio(self, text='You can talk now.'):
         shared_queue.put(text)
         while not keyboard.is_pressed('esc'):
             r = sr.Recognizer()
-            with sr.Microphone() as source:
+            with sr.Microphone() as source: # Uses the current available input (mic)
                 print(text)
-                audio = r.listen(source)
+                audio = r.listen(source) # Listening 
                 try:
-                    said = r.recognize_google(audio)
+                    said = r.recognize_google(audio) # Using google gTTS to try recognize what is being said
                     print(said)
-                    shared_speech_queue.put(said)
+                    shared_speech_queue.put(said) # This is a queue to be sent to the django view and load on interface
                     return said.lower()
                 except sr.UnknownValueError:
                     print("Google Speech Recognition could not understand audio")
@@ -75,35 +76,35 @@ class PersonalAssistant:
 
     def process_command(self, command):
         # Check if the command contains the trigger word "friday"
-        if "friday" in command:
+        if "friday" in command: # That represent a command
             temp = set(command.split())
             if len(list(temp.intersection(self.spotify_word_list))) >= 1:
                 self.spotify.isTheTokenValid(getNewOne=True)
-                if "pause" in command:
+                if "pause" in command: # Check if the word 'pause' is in the sentence
                     self.spotify.spotifyPlaybackControl('pause')
 
-                elif "skip" in command or "next" in command:
+                elif "skip" in command or "next" in command: # Check if the word 'next' is in the sentence
                     self.spotify.spotifyPlaybackControl('next')
 
-                elif "previous" in command:
+                elif "previous" in command: # Check if the word 'previous' is in the sentence
                     self.spotify.spotifyPlaybackControl('prev')
 
-                elif "play" in command:
+                elif "play" in command: # Check if the word 'play' is in the sentence
                     self.spotify.spotifyPlaybackControl('play')
 
-                elif "open spotify" in command:
+                elif "open spotify" in command: # Check if the word 'open spotify' is in the sentence
                     self.spotify.getDevice()
                 else:
                     self.speech("Sorry, I didn't understand the music command.")
                     self.get_audio('Can you repeat.')
 
-            elif "shut down" in command:
+            elif "shut down" in command: # Check if the word 'shut down' is in the sentence
                 self.personalAssistant_status = False
                 shared_queue.put("Personal Assistant Turning Off...")
                 redirect('index')
                 return self.personalAssistant_status
 
-        else:
+        else: # I did not use friday in the sentence
             shared_queue.put("Sorry, I didn't recognize the trigger word 'friday'.")
             print("Sorry, I didn't recognize the trigger word 'friday'.")
 
@@ -116,7 +117,6 @@ class PersonalAssistant:
             audio = self.get_audio()
             self.process_command(audio)
 
-            time.sleep(0.1)
         print('Personal Assistant is offline')
 
 
