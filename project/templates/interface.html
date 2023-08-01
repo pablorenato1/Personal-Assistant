@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> -->
+    <title>Virtual Assistant</title>
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="../static/js/event_handler.js"></script>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <a href="#" class="logo">Virtual Assistant</a>
+        <div class="switch-container">
+            <form id="personalAssistantForm" action="{% url 'startPersonalAssistant' %}" method="get">
+                <!-- Replace with the checkbox input and label -->
+                {% if request.GET.personalAssistantStatus or personalAssistantStatus %}
+                    <input type="checkbox" 
+                    id="checkbox" 
+                    name="personalAssistant" checked>
+                {% else %}
+                    <input type="checkbox" 
+                    id="checkbox" name="personalAssistant">
+                {% endif %}
+                <label for="checkbox" class="switch">
+                    <div class="powersign"></div>
+                </label>
+            </form>
+            
+        </div>
+    </div>
+    <div class="container">
+        <div class="side-bar status-part">
+            <!-- API Status -->
+            <div class="status-section">
+                <h2>Status</h2>
+                <form action="{% url 'requestSpotifyAuthorization' %}" method="get" style="display: block;">
+                    <button class="btn">Authenticate</button>             
+                </form>
+                <div class="status-light" id="spotify-status">
+                    {% if request.GET.access_token or access_token %}
+                        <div id="successful-connection" class="status-light__status"></div>
+                    {% else %}
+                        <div class="status-light__status"></div>
+                    {% endif %}
+                    <div class="status-light__content"> Spotify </div>
+                </div>
+                <div class="status-light" id="youtube-status">
+                    <div class="status-light__status"></div>
+                    <div class="status-light__content"> Youtube </div>
+                </div>
+                <div class="status-light" id="calendar-status">
+                    <div class="status-light__status"></div>
+                    <div class="status-light__content"> Calendar </div>
+                </div>
+                <div class="status-light" id="task-manager-status">
+                    <div class="status-light__status"></div>
+                    <div class="status-light__content"> Task Manager </div>
+                </div>
+            </div>
+       </div>
+       <!-- Main Content -->
+        <div class="main-content">
+           <div class="sub-content">
+                <!-- Playback Card -->
+                <div class="playback-card">
+                    <h2>Spotify Playback</h2>
+                    <p>Now playing: Song Title</p>
+                    <div class="buttons">
+                        <button class="btn-playback btn-prev" id="previous-button"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-skip-start-fill" viewBox="0 0 16 16">
+                            <path d="M4 4a.5.5 0 0 1 1 0v3.248l6.267-3.636c.54-.313 1.232.066 1.232.696v7.384c0 .63-.692 1.01-1.232.697L5 8.753V12a.5.5 0 0 1-1 0V4z"/>
+                          </svg></button>
+                        <button class="btn-playback btn-play-pause" id="btn-play-pause"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill" viewBox="0 0 16 16">
+                            <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                          </svg></button>
+                        <button class="btn-playback btn-next" id="next-button"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-skip-end-fill" viewBox="0 0 16 16">
+                            <path d="M12.5 4a.5.5 0 0 0-1 0v3.248L5.233 3.612C4.693 3.3 4 3.678 4 4.308v7.384c0 .63.692 1.01 1.233.697L11.5 8.753V12a.5.5 0 0 0 1 0V4z"/>
+                          </svg></i></button>
+                    </div>
+                  </div>             
+                <!-- Conversation Section -->
+                <div class="conversation" id="chat-container">
+                    <!-- <div class="scrollbar" id="style-1"></div> -->
+                    <div class="message user-message">Hello, Assistant!</div>
+                    <div class="message assistant-message">Hi! How can I help you today?</div>
+                    <script>
+                        let url_chat = `ws://${window.location.host}/ws/voiceOutput/`
+                        const chatSocket = new WebSocket(url_chat)
+                        
+                        chatSocket.onmessage = function(e) {
+                            const data = JSON.parse(e.data);
+                            const messageType = data.type;
+                            const messageData = data.data;
+                            
+                            if (messageType === 'response') {
+                                const chatContainer = document.getElementById('chat-container');
+                                chatContainer.innerHTML += messageData;
+
+                                // Scroll to the bottom of the page
+                                chatContainer.scrollTop = chatContainer.scrollHeight;
+                            }
+                        }
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const playPauseButton = document.querySelector('.btn-play-pause');
+        let isPlaying = false;
+
+        playPauseButton.addEventListener('click', function() {
+            if (isPlaying) {
+                playPauseButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-fill" viewBox="0 0 16 16"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>'; // Set to "Play" icon
+                isPlaying = false;
+                // Add logic to pause playback here...
+            } else {
+                playPauseButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pause-fill" viewBox="0 0 16 16"> <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>'; // Set to "Pause" icon
+                isPlaying = true;
+            }
+        });
+
+        // personalAssistant Button
+        document.getElementById('checkbox').addEventListener('change', function() {
+        document.getElementById('personalAssistantForm').submit();
+        });
+        
+        // Exchange when pressed playback button  
+        
+        addEventListeners()
+    </script>
+
+      
+</body>
+
+</html>

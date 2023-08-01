@@ -5,10 +5,13 @@ import json
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 from django.http import HttpResponse, HttpResponseRedirect
-from project.static.python.shared_queue import shared_queue
+from project.static.python.shared_queue import error_logger, debug_logger, info_logger
 import requests
 import webbrowser
 from dotenv import load_dotenv
+import json
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 # Load env files
 load_dotenv()
@@ -30,19 +33,19 @@ class SpotifyAssistant:
         self.tokenExpireTime = datetime.fromisoformat(json_data['TOKEN_TIME'])
         self.authorizationCode = None
         self.accessToken = json_data["ACCESS_TOKEN"]
-        self.deviceId = "Unknown"
-        self.isPlaying = "Unknown" # If it's playing the moment it request
+        self.deviceId = json_data['DEVICE_ID']
+        self.isPlaying = False # If it's playing the moment it request
         
         if json_data["REFRESH_TOKEN"] == "": self.refresh = False # There's not refresh Token
         else: self.refresh = True # There's a refresh Token
 
-    def getVariableFromJson(self, arg=[]):
+    def getVariableFromJson(self, *args):
         # print("Asking for variable") #Debug purpose
         with open("project\static\python/auth.json", 'r') as file: # Read the data from json file
             json_data = json.load(file)
 
         response = {} # Create a dict to save the variables that asked for
-        for var in arg:
+        for var in args:
             response[var] = json_data[var] # Kinda transfer them from one to another
         return response
 
@@ -87,7 +90,7 @@ class SpotifyAssistant:
         return False
  
     def getSpotifyAuthorization(self, view=True):
-        # print("Asking for a Auth") #Debug purpose
+        info_logger.info("Getting authorization from spotify web api") # Getting authorization from spotify web api
         auth_url = 'https://accounts.spotify.com/authorize?'
         params = {
             'client_id': self.client_id,
@@ -102,9 +105,7 @@ class SpotifyAssistant:
         time.sleep(15)
 
     def requestAToken(self): 
-        # print("Asking for a Token") #Debug purpose
-        # Should only be evoked in the view when the button is clicked and in the isTheTokenValid function, because of the logic implemented
-        # Creating headers 'Authorization' value 
+        debug_logger.debug("Getting a token from spotify web api")
         auth_string = f"{self.client_id}:{self.client_secret}"
         auth_bytes = auth_string.encode("utf-8")
         auth_base64 = str(base64.b64encode(auth_bytes), "utf-8")
@@ -112,7 +113,7 @@ class SpotifyAssistant:
         if self.refresh: # Get token using Refresh Token
             body = {
                 'grant_type': 'refresh_token',
-                'refresh_token': self.getVariableFromJson(["REFRESH_TOKEN"])["REFRESH_TOKEN"]
+                'refresh_token': self.getVariableFromJson("REFRESH_TOKEN")["REFRESH_TOKEN"]
             }
             refresh_token= ""
             
@@ -153,7 +154,7 @@ class SpotifyAssistant:
         return False
 
     def getDevice(self):
-        # print("Asking for a Device") #Debug purpose
+        debug_logger.debug("Getting the devices connected in the account")
         temp = requests.get("https://api.spotify.com/v1/me/player/devices", headers={"Authorization": f'Bearer {self.accessToken}'})
 
         if temp.status_code == 200:
@@ -184,7 +185,7 @@ class SpotifyAssistant:
         return False
     
     def getPlayBack(self):
-        print("Asking for a Playback") #Debug purpose
+        debug_logger.debug("Getting the playback from the current device connected.")
         response = requests.get("https://api.spotify.com/v1/me/player", headers={"Authorization": f'Bearer {self.accessToken}'})
 
         if response.status_code == 200: # OK
@@ -194,7 +195,7 @@ class SpotifyAssistant:
                 self.deviceId = json_response['device']['id']
                 self.updateOnJson(playback=[True, json_response])
             except json.JSONDecodeError:
-                print('Error: Invalid JSON response.')
+                error_logger.error('Error: Invalid JSON response.')
             return True # Was able to obtain the current playback state
 
         elif response.status_code == 204:
@@ -212,14 +213,6 @@ class SpotifyAssistant:
         return False
 
     def spotifyPlaybackControl(self, command):
-        # print("Asking for a Command") #Debug purpose
-
-        if self.deviceId == "Unknown":
-            getDeviceStatus = self.getPlayBack()
-            if not getDeviceStatus:
-                print("There's some error, please check it out.")
-                shared_queue.put("There's some error, please check it out.")
-                return HttpResponse("There is some error, please check it out.")
             
         if not self.isTheTokenValid(getNewOne=True):
             print("There's some problem, I will not be able to execute your request.")
@@ -232,42 +225,55 @@ class SpotifyAssistant:
         
         if self.isPlaying and command == "play":
             command = "pause"
-        print('Executing spotify-control:', command)
+        debug_logger.debug(f"Executing spotify-control: {command}")
+
         if command == 'play':
             response = requests.put(f'{url_request}/play/?device_id={self.deviceId}', headers=headers)
             result = "Playing"
+            debug_logger.debug(f"Requesting play")
 
-            shared_queue.put('Ok, playing music')
-            # self.admin.speech('Ok, playing music')
+            self.send_websocket_message('Ok, playing music')
+            # self.admin.speech('Ok, playing music') # Only work if you also run the personal assistant class
             self.isPlaying = True
         elif command == 'pause':
             response = requests.put(f'{url_request}/pause/?device_id={self.deviceId}', headers=headers)
             result = "Music Paused"
 
-            shared_queue.put('Ok, pausing music on Spotify')
-            self.admin.speech('Paused')
+            self.send_websocket_message('Ok, pausing music on Spotify')
             self.isPlaying = False
-        elif command == 'next':
+            
+        elif command == 'next' or command == 'skip':
             response = requests.post(f'{url_request}/next/?device_id={self.deviceId}', headers=headers)
 
             result = "Next Music"
-            shared_queue.put('Skipping to the next Music')
-            # self.admin.speech('Skipping to the next Music')
+            self.send_websocket_message('Skipping to the next Music')
+            # self.admin.speech('Skipping to the next Music') # Only work if you also run the personal assistant class
         elif command == "prev":
             response = requests.post(f'{url_request}/previous/?device_id={self.deviceId}', headers=headers)
 
             result = "Previous Music"
-            shared_queue.put('Ok, go back to the previous Music')
-            # self.admin.speech('Ok, go back to the previous Music')
+            self.send_websocket_message('Ok, go back to the previous Music')
+            # self.admin.speech('Ok, go back to the previous Music') # Only work if you also run the personal assistant class
 
         else:
             result = "Invalid command."
+        info_logger.info(f"Response to the command '{command}': {response.status_code}")
+        print(f'Response to command "{command}": ', response.status_code)
 
-        # try:
-        #     print(f'Response to command "{command}": ', response.status_code)
-        # except:
-        #     pass
         return HttpResponse(result)
+
+    def send_websocket_message(self, message):
+        channel_layer = get_channel_layer()
+
+        group_name = 'backend_response'
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                'type':'send_group_message',
+                'type-message':'personalAssistant',
+                'data':message
+            }
+        )
 
 # Implement a way to change device that is current play from smartphone to computer or the other way around
 

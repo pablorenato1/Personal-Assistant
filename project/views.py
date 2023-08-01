@@ -24,7 +24,8 @@ client_id = os.getenv("CLIENT_ID")
 client_secret = os.getenv("CLIENT_SECRET")
 
 def index(request):
-    params['personalAssistantStatus'] = personalAssistant.Status
+    if personalAssistant.Status:
+        params['personalAssistantStatus'] = personalAssistant.Status
     if spotify.isTheTokenValid(): # return True if it is expired
         params['access_token'] = '1'
         params['code'] = '1'
@@ -36,7 +37,7 @@ def index(request):
     else:
         params['message'] = False
 
-    return render(request, 'home.html', params)
+    return render(request, 'interface.html', params)
 
 def updateOnInterface(request):
 
@@ -49,7 +50,7 @@ def updateOnInterface(request):
 
 def requestSpotifyAuthorization(request=None):
     if spotify.isTheTokenValid():
-        return render(request, 'home.html', params)
+        return render(request, 'interface.html', params)
     authorization_url = spotify.getSpotifyAuthorization(view=True)
     return redirect(authorization_url)
 
@@ -66,8 +67,7 @@ def handleSpotifyCallback(request):
     return redirect('index')
 
 def interfacePlaybackControl(request):
-
-    if spotify.isTheTokenValid(): # true
+    if spotify.isTheTokenValid(getNewOne=True): # true
         try: command = request.GET.get('command')
         except: command = request
         
@@ -78,11 +78,10 @@ def interfacePlaybackControl(request):
     
 def startPersonalAssistant(request):
     personalAssistant.Status = True
+    params['personalAssistantStatus'] = personalAssistant.Status
     # Initializing the Thread/Personal Assistant
     invokePA = threading.Thread(target=personalAssistant.main)
     invokePA.start()
-    
-    time.sleep(3)
-
+    time.sleep(0.5)
     return redirect('index')
 

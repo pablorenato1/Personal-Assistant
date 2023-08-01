@@ -2,9 +2,9 @@
 
 // Function to handle the event listeners for previous, play/pause, and next buttons
 function addEventListeners() {
-  const previousButton = document.getElementById("previous-button");
-  const pauseAndPlayButton = document.getElementById("PauseAndPlay-button");
-  const nextButton = document.getElementById("next-button");
+  const previousButton = document.querySelector("#previous-button");
+  const pauseAndPlayButton = document.querySelector("#btn-play-pause");
+  const nextButton = document.querySelector("#next-button");
 
   previousButton.addEventListener("click", () => {
       callBackgroundFunction("prev");
@@ -19,6 +19,11 @@ function addEventListeners() {
   });
 }
 
+
+
+
+
+
 function callBackgroundFunction(command) {
   // Send an AJAX request to your Django view
   var xhr = new XMLHttpRequest();
@@ -29,16 +34,13 @@ function callBackgroundFunction(command) {
     if (xhr.readyState === XMLHttpRequest.DONE) {
       if (xhr.status === 200) {
         // Update the HTML tag with the result
-        document.getElementById("resultTag").textContent = xhr.responseText;
+        // document.getElementById("resultTag").textContent = xhr.responseText;
       } else {
         // Handle error cases
-        document.getElementById("resultTag").textContent = "Error occurred.";
+        // document.getElementById("resultTag").textContent = "Error occurred.";
       }
     }
   };
 
   xhr.send();
 }
-
-// Call the addEventListeners function to set up the event handlers
-addEventListeners();

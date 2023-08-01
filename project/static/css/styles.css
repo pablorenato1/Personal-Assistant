@@ -1,33 +1,337 @@
-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+/* Reset some default styles */
+body, h1, p, ul {
+    margin: 0;
+    padding: 0;
 }
 
-.spotify-container {
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1e1e1e;
+    color: #fff;
+}
+
+.container {
     display: flex;
-    flex-direction: column;
+    /* background-color: blue; */
+}
+
+.main-content {
+    display: inline;
+    width: 100%;
+}
+
+
+/* Navbar styles */
+.navbar {
+    background-color: #333;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    text-decoration: none;
+}
+
+.status {
+    color: #ffce54;
+    margin-right: 10px;
+}
+
+/* On/Off switch styles */
+#checkbox {
+    display: none;
+  }
+  
+.switch {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    background-color: rgb(99, 99, 99);
+    border-radius: 50%;
+    z-index: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    border: 2px solid rgb(126, 126, 126);
+    box-shadow: 0px 0px 3px rgb(2, 2, 2) inset;
+}
+
+.powersign {
+    position: relative;
+    width: 30%;
+    height: 30%;
+    border: 4px solid rgb(48, 48, 48);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.powersign::before {
+    content: "";
+    width: 8px;
+    height: 100%;
+    background-color: rgb(99, 99, 99);
+    position: absolute;
+    top: -60%;
+    z-index: 2;
+}
+
+.powersign::after {
+    content: "";
+    width: 4px;
+    height: 100%;
+    background-color: rgb(48, 48, 48);
+    position: absolute;
+    top: -60%;
+    z-index: 3;
+}
+
+#checkbox:checked + .switch .powersign {
+    border: 4px solid rgb(255, 255, 255);
+    box-shadow: 0px 0px 10px rgb(151, 243, 255),
+    0px 0px 5px rgb(151, 243, 255) inset;
+}
+
+#checkbox:checked + .switch .powersign::after {
+    background-color: rgb(255, 255, 255);
+    box-shadow: 0px 0px 5px rgb(151, 243, 255);
+}
+
+#checkbox:checked + .switch {
+    box-shadow: 0px 0px 1px rgb(151, 243, 255) inset,
+        0px 0px 2px rgb(151, 243, 255) inset,
+        0px 0px 10px rgb(151, 243, 255) inset,
+        0px 0px 40px rgb(151, 243, 255),
+        0px 0px 100px rgb(151, 243, 255),
+        0px 0px 5px rgb(151, 243, 255);
+    border: 2px solid rgb(255, 255, 255);
+    background-color: rgb(146, 180, 184);
+}
+
+#checkbox:checked + .switch .powersign::before {
+    background-color: rgb(146, 180, 184);
+}
+
+  
+/* Status / Side bar */
+
+
+.status-section {
+    width: 180px;
+}
+
+.status-section h2 {
+    margin-top: 0;
+}
+
+.status-light {
+    /* Center the content */
+    align-items: center;
+    display: flex;
+}
+
+.status-light__status {
+    /* Background color */
+    background-color: #d02a18;
+    
+    /* Rounded border */
+    border-radius: 9999px;
+    
+    /* Size */
+    height: 0.5rem;
+    width: 0.5rem;
+    
+    /* Spacing */
+    margin-right: 0.5rem;
+}
+#successful-connection {
+    background-color: #3e8744;
+}
+
+.status-light__content {
+    /* Take available width */
+    flex: 1;
+}
+/* Auth Button */
+.btn {
+    background-color: blueviolet;
+    height: 25px;
+    text-align: center;
+    padding-top: 5px;
+    margin-bottom: 10px;
+    /* background-color: #f4f4f4; */
+}
+
+
+/* Conversation styles */
+.conversation {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    margin-left: 20px;
+}
+
+.scrollbar {
+	margin-left: 30px;
+	float: left;
+	height: 300px;
+	width: 65px;
+	background: #F5F5F5;
+	overflow-y: scroll;
+	margin-bottom: 25px;
+}
+
+.conversation::-webkit-scrollbar {
+    width: 8px; /* Set the width of the scrollbar */
+}
+
+.conversation::-webkit-scrollbar-thumb {
+    background-color: #555; /* Color of the scrollbar thumb */
+    border-radius: 10px; /* Rounded corners */
+}
+
+.conversation::-webkit-scrollbar-thumb:hover {
+    background-color: #666; /* Color of the scrollbar thumb on hover */
+}
+
+.conversation::-webkit-scrollbar-track {
+    background-color: #333; /* Color of the scrollbar track */
+}
+
+.message {
+    width: fit-content;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.user-message {
+    background-color: #55ce63;
+    color: #fff;
+}
+
+.assistant-message {
+    background-color: #555;
+    color: #fff;
+}
+
+/* Playback card styles */
+.playback-card {
+    background-color: #444;
+    padding: 20px;
+    max-width: 250px;
+    margin: 0 20px 20px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.playback-card h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.playback-card p {
+    color: #aaa;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
 }
 
 button {
-    margin-right: 50px;
-    height: 50%;
-    margin-top: 15px;
-}
-
-.login-status {
     display: flex;
+    /* align-items: center; */
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    background-color: #4CAF50;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+}
+/* 
+.btn-play-pause {
+    width: 60px;
+} */
+button svg path {
+    width: 24px;
+    height: 24px;
+}
+button svg path {
+    transform-origin: center;
 }
 
-.status-spotify {
+button.btn-play-pause svg {
+    transform: scale(1.5);
+}
+button.btn-next svg {
+    transform: scale(2);
+}
+button.btn-prev svg {
+    transform: scale(1.8);
+}
+
+button i {
+    font-size: 24px;
+}
+
+button:hover .btn-playback {
+    background-color: #45a049;
+}
+
+button:active .btn-playback {
+    background-color: #3e8744;
+}
+
+
+/* Spotify Status styles */
+.status-section {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    margin-left: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.status-message {
     display: flex;
-    flex-direction: column;
+    align-items: center;
 }
 
-p, #resultTag {
-    margin-bottom: 0;
-    text-align: center;
+.status-icon {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.connected .status-icon {
+    background-color: #55ce63;
+}
+
+.disconnected .status-icon {
+    background-color: #e74c3c;
+}
+
+.status-text {
+    font-weight: bold;
 }

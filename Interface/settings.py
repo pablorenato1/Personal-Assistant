@@ -27,12 +27,16 @@ SECRET_KEY = 'django-insecure-e#t%ldf*g^a7nrr)rsdrq&89m$nsaqf_y*=6oq-dmqp6sgd=q-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
+
+    'project',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +44,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+ASGI_APPLICATION = "Interface.asgi.application"
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -125,3 +138,5 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'project/static/')]
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
