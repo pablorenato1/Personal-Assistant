@@ -23,8 +23,6 @@ The project includes the following components:
 To run the project, make sure you have the following dependencies installed:
 
 - Python 3.x 
-- `pyaudio`
-- `pygame`
 - `speech_recognition`
 - `gtts`
 - `keyboard`
@@ -42,12 +40,14 @@ pip install -r requirements.txt
 
 ```bash
 git clone https://github.com/pablorenato1/Virtual-Assistant.git
+```
+```bash
 cd Virtual-Assistant
 ```
 
 ### Set up environment variables:
 
-Create a .env file in the project root directory and add the necessary environment variables:
+Create a .env file in the project root directory "../project/static/python" and add these variables:
 
 ```plaintext
 CLIENT_ID=your_spotify_client_id
@@ -55,18 +55,19 @@ CLIENT_SECRET=your_spotify_client_secret
 AUDIO_PATH=/path/to/save/audio/output.mp3
 SPOTIFY_PATH=/path/to/spotify.exe (Optional: Path to your Spotify executable, if using Windows)
 ```
-Obs.: The path to Spotify.exe is only used if you try any command without having you spotify open
+Obs.: The path to Spotify.exe is only necessary if you try to execute any operation without open you spotify.
 
 #### How to get CLIENT_ID and CLIENT_SECRET:
-* Well both can be found in you https://developer.spotify.com/dashboard
+* Both can be found in you https://developer.spotify.com/dashboard
     *  If you don't have an 'app' on dashboard create one with the name as you prefer
     * In the "Redirect URIs" option you should put: http://localhost:8000/token
+
+Obs.: Only change the _Redirect URIs_ if you know what you are doing.
 ### Install project dependencies:
 
 ```
 pip install -r requirements.txt
 ```
-* Change the name of the json file on **/project/static/python** to auth.json
 ## How to use
 ### Run the Django development server:
 
@@ -75,12 +76,16 @@ python manage.py runserver
 ```
 ### Access the personal assistant web interface:
 
-Open your web browser and go to http://localhost:8000/
+While pressing ```Ctrl```, click on the link in the terminal.
+
+It's usually this link: http://127.0.0.1:8000/
 
 ### Get Spotify Authorization:
 
-* Click on the "Authorize Spotify" button to authenticate with Spotify and grant the necessary permissions.
+* Click on the "Authenticate" button to authenticate with Spotify and grant the necessary permissions to the program to work.
 * Follow the authentication process to obtain the access token.
+
+# Explanations
 ### Code: SpotifyAssistant
 The SpotifyAssistant class in project/static/python/spotify.py handles Spotify authentication and playback control.
 
