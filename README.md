@@ -2,32 +2,10 @@
 
 This is a Django project for a simple personal assistant with voice interaction and Spotify integration.
 
-<style>
-.warning {
-    padding: 1em;
-    border: 2px solid #f0ad4e;
-    background-color: #fcf8e3;
-    border-radius: 5px;
-}
-.warning h3 {
-    margin-top: 0;
-    margin-bottom: 0.5em;
-    color: Orange;
-}
-.warning p {
-    margin-top: 0;
-    color: black
-}
-</style>
 
+> **Warning:**
+> This project is for personal uses and is currently under development, and certain features may not be fully functional. 
 
-<div class="warning" markdown="1">
-
-### Important Notice
-
-This project is currently under development, and certain features may not be fully functional or stable. 
-
-</div>
 
 
 ## Project Overview
@@ -63,8 +41,8 @@ pip install -r requirements.txt
 ### Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/personal-assistant-django.git
-cd personal-assistant-django
+git clone https://github.com/pablorenato1/Virtual-Assistant.git
+cd Virtual-Assistant
 ```
 
 ### Set up environment variables:
@@ -77,6 +55,8 @@ CLIENT_SECRET=your_spotify_client_secret
 AUDIO_PATH=/path/to/save/audio/output.mp3
 SPOTIFY_PATH=/path/to/spotify.exe (Optional: Path to your Spotify executable, if using Windows)
 ```
+Obs.: The path to Spotify.exe is only used if you try any command without having you spotify open
+
 #### How to get CLIENT_ID and CLIENT_SECRET:
 * Well both can be found in you https://developer.spotify.com/dashboard
     *  If you don't have an 'app' on dashboard create one with the name as you prefer
