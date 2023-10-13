@@ -19,7 +19,7 @@ settings_secret.py
 # Ignore environment-specific files
 .env
 *.env.*
-# auth.json
+auth.json
 listOfDesktopID.txt
 
 # Ignore log files

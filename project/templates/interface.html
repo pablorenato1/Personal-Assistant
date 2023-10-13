@@ -8,6 +8,7 @@
     <title>Virtual Assistant</title>
     <link rel="stylesheet" href="../static/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" href="../static/image/favicon.ico" type="image/x-icon">
     <script src="../static/js/event_handler.js"></script>
 </head>
 
@@ -85,25 +86,8 @@
                 <!-- Conversation Section -->
                 <div class="conversation" id="chat-container">
                     <!-- <div class="scrollbar" id="style-1"></div> -->
-                    <div class="message user-message">Hello, Assistant!</div>
-                    <div class="message assistant-message">Hi! How can I help you today?</div>
                     <script>
-                        let url_chat = `ws://${window.location.host}/ws/voiceOutput/`
-                        const chatSocket = new WebSocket(url_chat)
                         
-                        chatSocket.onmessage = function(e) {
-                            const data = JSON.parse(e.data);
-                            const messageType = data.type;
-                            const messageData = data.data;
-                            
-                            if (messageType === 'response') {
-                                const chatContainer = document.getElementById('chat-container');
-                                chatContainer.innerHTML += messageData;
-
-                                // Scroll to the bottom of the page
-                                chatContainer.scrollTop = chatContainer.scrollHeight;
-                            }
-                        }
                     </script>
                 </div>
             </div>

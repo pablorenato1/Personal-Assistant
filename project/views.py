@@ -7,12 +7,11 @@ import os
 from urllib.parse import urlencode
 import threading
 from project.static.python.core import PersonalAssistant
-from project.static.python.spotify import SpotifyAssistant
+from project.static.python.spotify import Spotify
 from project.static.python.shared_queue import shared_queue, shared_speech_queue
 
 
-# Create your views here.
-spotify = SpotifyAssistant()
+spotify = Spotify()
 personalAssistant = PersonalAssistant(spotify=spotify)
 spotify.admin = personalAssistant
 
@@ -30,17 +29,17 @@ def index(request):
         params['access_token'] = '1'
         params['code'] = '1'
     
-    if shared_queue.qsize() > 0: # What the Assistant Said
-        params['message'] = shared_queue.get()
-    if shared_speech_queue.qsize() >0: # What i said
-        params['whatISaid'] = shared_speech_queue.get()
-    else:
-        params['message'] = False
+    # if shared_queue.qsize() > 0: # What the Assistant Said
+    #     params['message'] = shared_queue.get()
+    # if shared_speech_queue.qsize() >0: # What i said
+    #     params['whatISaid'] = shared_speech_queue.get()
+    # else:
+    #     params['message'] = False
 
     return render(request, 'interface.html', params)
 
 def updateOnInterface(request):
-
+    print("Still used?")
     if shared_queue.qsize() > 0:
         params['message'] = shared_queue.get()
     if shared_speech_queue.qsize() > 0:
@@ -48,6 +47,9 @@ def updateOnInterface(request):
     
     return JsonResponse(params)
 
+# ----------------------------------------------------------
+# Spotify Interactions
+# ----------------------------------------------------------
 def requestSpotifyAuthorization(request=None):
     if spotify.isTheTokenValid():
         return render(request, 'interface.html', params)
@@ -57,7 +59,6 @@ def requestSpotifyAuthorization(request=None):
 def handleSpotifyCallback(request):
     spotify.authorizationCode = request.GET.get('code')
     if spotify.authorizationCode:
-
         for _ in range(3): # Attempt to Request a Token three times
             if spotify.requestAToken():
                 break
@@ -71,11 +72,13 @@ def interfacePlaybackControl(request):
         try: command = request.GET.get('command')
         except: command = request
         
-        return spotify.spotifyPlaybackControl(command)
+        return spotify.send_command(command)
     else:
         return HttpResponse("Your authorization expired or some error that I did not expect.")
     # Get the command data from the AJAX (js) request
-    
+
+# ----------------------------------------------------------
+# Start the personal Assistant
 def startPersonalAssistant(request):
     personalAssistant.Status = True
     params['personalAssistantStatus'] = personalAssistant.Status

@@ -4,25 +4,18 @@ import base64
 import json
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect # Django
 from project.static.python.shared_queue import error_logger, debug_logger, info_logger
 import requests
 import webbrowser
 from dotenv import load_dotenv
 import json
-from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 # Load env files
 load_dotenv()
 
-viewAuth = 'http://localhost:8000/backend_request/' # Did i use it ?
-
-# Create Function
-
-# That will verify if the token, if true, do not try to get info of devices
-
-class SpotifyAssistant:
+class Spotify:
 
     def __init__(self):
         with open("project\static\python/auth.json", 'r') as file:
@@ -30,7 +23,8 @@ class SpotifyAssistant:
         self.admin = None
         self.client_id = os.getenv("CLIENT_ID")
         self.client_secret = os.getenv("CLIENT_SECRET")
-        self.tokenExpireTime = datetime.fromisoformat(json_data['TOKEN_TIME'])
+        try: self.tokenExpireTime = datetime.fromisoformat(json_data['TOKEN_TIME'])
+        except: self.tokenExpireTime = datetime.now() - timedelta(days=1) # Set the token time to expire to the previous day, so the code ill interpret as it already expires so ill get a new one. 
         self.authorizationCode = None
         self.accessToken = json_data["ACCESS_TOKEN"]
         self.deviceId = json_data['DEVICE_ID']
@@ -49,7 +43,7 @@ class SpotifyAssistant:
             response[var] = json_data[var] # Kinda transfer them from one to another
         return response
 
-    def updateOnJson(self, refresh=[False, None], playback=[False, None]):
+    def updateJson(self, refresh=[False, None], playback=[False, None]):
         # print("Asking to Update") #Debug purpose
         with open("project\static\python/auth.json", 'r') as file:
                 json_data = json.load(file)
@@ -85,7 +79,7 @@ class SpotifyAssistant:
                 self.requestAToken()
                 if self.accessToken: # True
                     break
-            self.updateOnJson()
+            self.updateJson()
             return True
         return False
  
@@ -133,57 +127,57 @@ class SpotifyAssistant:
 
         response = requests.post(token_url, headers=headers, data=body)
 
-        if response.status_code == 200: # OK
+        if response.status_code != 200: # Not Ok
+            error_logger.error(f"Error[{response.status_code}]: While requesting a token to the Web API")
+        try:
+            json_response = json.loads(response.content)
+            self.accessToken = json_response['access_token']
             try:
-                json_response = json.loads(response.content)
-                self.accessToken = json_response['access_token']
-                try:
-                    refresh_token = json_response['refresh_token']
-                    self.refresh = True
-                    self.updateOnJson(refresh=[True, refresh_token])
-                except: pass
-                datetime_to_str = datetime.now() + timedelta(hours=1)
-                self.tokenExpireTime = datetime_to_str
+                refresh_token = json_response['refresh_token']
+                self.refresh = True
+                self.updateJson(refresh=[True, refresh_token])
+            except: pass
+            datetime_to_str = datetime.now() + timedelta(hours=1)
+            self.tokenExpireTime = datetime_to_str
 
-                self.updateOnJson()
-                return True # All the changes were saved and was OK
-            except json.JSONDecodeError:
-                print('Error: Invalid JSON response while get a token.')
-        else:
-            print('Error(Token Response):', response.status_code)
+            self.updateJson()
+            return True # All the changes were saved and was OK
+        except json.JSONDecodeError:
+            error_logger.error(f"Error[JSON Response]: Response from token request is Invalid.")
         return False
 
     def getDevice(self):
         debug_logger.debug("Getting the devices connected in the account")
         temp = requests.get("https://api.spotify.com/v1/me/player/devices", headers={"Authorization": f'Bearer {self.accessToken}'})
 
-        if temp.status_code == 200:
-            temp = json.loads(temp.content)
-            if not temp["devices"]: # If spotify is closed or it's not 'sync', response = {'devices':[]}
-                spotify_path = os.getenv("SPOTIFY_PATH") # My path to spotify
-                os.system(f'"{spotify_path}"')
-                return self.getDevice()
+        if temp.status_code != 200: # If the request did not succeed
+            error_logger.error(f'Error[{temp.status_code}]: This error occurred while getting devices.')
+            return False
+        
+        temp = json.loads(temp.content)
+        if not temp["devices"]: # If spotify is closed or it's not 'sync', response = {'devices':[]}
+            spotify_path = os.getenv("SPOTIFY_PATH") # My path to spotify
+            os.system(f'"{spotify_path}"')
+            return self.getDevice()
 
-            for device in temp['devices']:
-                if device['type'].lower() == 'computer':
-                    url_request_transfer = "https://api.spotify.com/v1/me/player"
-                    self.deviceId = device['id']
-                    self.isPlaying = device['is_active'] 
-                    self.updateOnJson()
+        for device in temp['devices']:
+            if device['type'].lower() == 'computer':
+                url_request_transfer = "https://api.spotify.com/v1/me/player"
+                self.deviceId = device['id']
+                self.isPlaying = device['is_active'] 
+                self.updateJson()
 
-                    headers_t = {
-                        "Authorization": f'Bearer {self.accessToken}',
-                        "Content-Type": "application/json"
-                    }
-                    data = {
-                        "device_ids": [self.deviceId]
-                    }
-                    transferPlayback = requests.put(url_request_transfer, headers=headers_t, json=data)
-                    print(f"Response change of device: {transferPlayback.status_code}")
-                    return True
-        print(f'Error {temp.status_code}: This error occurred while getting devices.')
-        return False
-    
+                headers_t = {
+                    "Authorization": f'Bearer {self.accessToken}',
+                    "Content-Type": "application/json"
+                }
+                data = {
+                    "device_ids": [self.deviceId]
+                }
+                transferPlayback = requests.put(url_request_transfer, headers=headers_t, json=data)
+                print(f"Response change of device: {transferPlayback.status_code}")
+                return True
+           
     def getPlayBack(self):
         debug_logger.debug("Getting the playback from the current device connected.")
         response = requests.get("https://api.spotify.com/v1/me/player", headers={"Authorization": f'Bearer {self.accessToken}'})
@@ -193,9 +187,9 @@ class SpotifyAssistant:
                 json_response = json.loads(response.content)
                 self.isPlaying = json_response['is_playing']
                 self.deviceId = json_response['device']['id']
-                self.updateOnJson(playback=[True, json_response])
+                self.updateJson(playback=[True, json_response])
             except json.JSONDecodeError:
-                error_logger.error('Error: Invalid JSON response.')
+                error_logger.error('Error[JSON Response]: Response from getting the current playback is Invalid.')
             return True # Was able to obtain the current playback state
 
         elif response.status_code == 204:
@@ -204,18 +198,20 @@ class SpotifyAssistant:
             time.sleep(5)
             spotify_path = os.getenv('SPOTIFY_PATH')
             os.system(f'"{spotify_path}"')
-            print("Error: Response 204, when getting devices")
+            error_logger.error(f"Error[{response.status_code}]: There's no active playback at the moment.")
             return False
         
         else:
-            print('Error[Getting Device Data]:', response.status_code)
-        print('Error[Getting Device Data]:', response.status_code)
+            error_logger.error(f"Error[{response.status_code}]: while trying to get the Playblack:")
         return False
 
-    def spotifyPlaybackControl(self, command):
+    def send_command(self, spotifyCommand):
+
+        if self.deviceId == "":
+            self.getDevice()
             
         if not self.isTheTokenValid(getNewOne=True):
-            print("There's some problem, I will not be able to execute your request.")
+            print("There's some problem, I will not be able to execute your request.") # DEBUG
             return HttpResponse("There's some problem, I will not be able to execute your request.")
 
         url_request = "https://api.spotify.com/v1/me/player"
@@ -223,57 +219,41 @@ class SpotifyAssistant:
             "Authorization": f'Bearer {self.accessToken}'
         }
         
-        if self.isPlaying and command == "play":
-            command = "pause"
-        debug_logger.debug(f"Executing spotify-control: {command}")
-
-        if command == 'play':
+        # Invert the command if is currently playing 
+        # [NEED TO BE REVIEW] It's only necessary because while debugging I usually stop either the program or the spotify manually and in this case is necessary
+        if self.isPlaying and spotifyCommand == "play":
+            spotifyCommand = "pause"
+        debug_logger.debug(f"Executing spotify-control: {spotifyCommand}")
+        if spotifyCommand == 'play':
             response = requests.put(f'{url_request}/play/?device_id={self.deviceId}', headers=headers)
             result = "Playing"
-            debug_logger.debug(f"Requesting play")
-
-            self.send_websocket_message('Ok, playing music')
             # self.admin.speech('Ok, playing music') # Only work if you also run the personal assistant class
             self.isPlaying = True
-        elif command == 'pause':
+        elif spotifyCommand == 'pause':
             response = requests.put(f'{url_request}/pause/?device_id={self.deviceId}', headers=headers)
             result = "Music Paused"
-
-            self.send_websocket_message('Ok, pausing music on Spotify')
             self.isPlaying = False
+
             
-        elif command == 'next' or command == 'skip':
+        elif spotifyCommand == 'next' or spotifyCommand == 'skip':
             response = requests.post(f'{url_request}/next/?device_id={self.deviceId}', headers=headers)
 
             result = "Next Music"
-            self.send_websocket_message('Skipping to the next Music')
             # self.admin.speech('Skipping to the next Music') # Only work if you also run the personal assistant class
-        elif command == "prev":
+        elif spotifyCommand == "prev":
             response = requests.post(f'{url_request}/previous/?device_id={self.deviceId}', headers=headers)
 
             result = "Previous Music"
-            self.send_websocket_message('Ok, go back to the previous Music')
+            
             # self.admin.speech('Ok, go back to the previous Music') # Only work if you also run the personal assistant class
-
+        if response.status_code == 200:
+            return HttpResponse(result)
         else:
-            result = "Invalid command."
-        info_logger.info(f"Response to the command '{command}': {response.status_code}")
-        print(f'Response to command "{command}": ', response.status_code)
+            error_logger.error(f"Error[{response.status_code}]: While trying to execute the command: {spotifyCommand}")
 
-        return HttpResponse(result)
+        
 
-    def send_websocket_message(self, message):
-        channel_layer = get_channel_layer()
-
-        group_name = 'backend_response'
-        async_to_sync(channel_layer.group_send)(
-            group_name,
-            {
-                'type':'send_group_message',
-                'type-message':'personalAssistant',
-                'data':message
-            }
-        )
+    
 
 # Implement a way to change device that is current play from smartphone to computer or the other way around
 
